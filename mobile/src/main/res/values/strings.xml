@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">SafeBabyOfThings</string>
+
+    <string name="status_connection">Estado conexão</string>
+    <string name="desconectado">Desconectado</string>
+    <string name="conectado">Conectado</string>
+    <string name="ic_connection">connection icon</string>
+
+    <!-- Dispositivos -->
+    <string name="name_device">Nome dispositivo</string>
+    <string name="no_devices">Nenhum dispositivo</string>
+    <string name="ic_device">device icon</string>
+
+    <string name="alerta_nivel_1">CUIDADO, BEBÊ NO CARRO!</string>
+    <string name="content_alerta_nivel_1">Cuidado, o bebê ainda está no carro!</string>
+    <string name="content_alerta_nivel_2">Volte no carro, o bebê ainda está lá!</string>
+    <string name="explanation_resources">Para que a aplicação funcione corretamente, é necessário que você habilite as funcionalidades abaixo.</string>
+    <string name="welcome">Bem Vindo!\n Este é o Safe Baby</string>
+    <string name="searching_device">Procurando dispositivo central …</string>
+    <string name="dispositivo_nao_encontrado">Dispositivo não encontrado!</string>
+    <string name="dispositivo_encontrado">Dispositivo encontrado!</string>
+</resources>

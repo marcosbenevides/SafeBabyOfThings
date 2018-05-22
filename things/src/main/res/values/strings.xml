@@ -1,0 +1,20 @@
+<resources>
+
+    <!-- Conexao -->
+    <string name="status_connection">Conexão</string>
+    <string name="desconectado">Desconectado</string>
+    <string name="conectado">Conectado</string>
+    <string name="ic_connection">connection icon</string>
+
+    <!-- Dispositivos -->
+    <string name="name_device">Dispositivo</string>
+    <string name="no_devices">Nenhum</string>
+    <string name="ic_device">device icon</string>
+
+    <string name="app_name">SafeBabyOfThings</string>
+    <string name="baby_status">Bebê</string>
+    <string name="safe_baby">Safe Baby</string>
+    <string name="presente">Presente</string>
+    <string name="alerta">ALERTA CRIANÇA NO CARRO</string>
+
+</resources>
