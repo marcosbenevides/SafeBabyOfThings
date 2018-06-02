@@ -16,5 +16,6 @@
     <string name="safe_baby">Safe Baby</string>
     <string name="presente">Presente</string>
     <string name="alerta">ALERTA CRIANÇA NO CARRO</string>
+    <string name="ausente">Ausente</string>
 
 </resources>

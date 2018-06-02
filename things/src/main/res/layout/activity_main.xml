@@ -19,7 +19,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-
     <android.support.v7.widget.CardView
         android:id="@+id/baby_status"
         android:layout_width="wrap_content"
@@ -56,6 +55,7 @@
                     android:textSize="16sp" />
 
                 <TextView
+                    android:id="@+id/status_baby"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/presente"
@@ -154,6 +154,31 @@
             </LinearLayout>
 
         </LinearLayout>
+    </android.support.v7.widget.CardView>
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:cardBackgroundColor="@color/accent"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="16dp"
+        app:contentPadding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/status">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableTop="@drawable/ic_error_white_100dp"
+            android:text="@string/alerta"
+            android:textColor="@android:color/white"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
     </android.support.v7.widget.CardView>
 
 </android.support.constraint.ConstraintLayout>

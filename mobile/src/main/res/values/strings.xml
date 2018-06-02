@@ -19,4 +19,8 @@
     <string name="searching_device">Procurando dispositivo central …</string>
     <string name="dispositivo_nao_encontrado">Dispositivo não encontrado!</string>
     <string name="dispositivo_encontrado">Dispositivo encontrado!</string>
+    <string name="alerta_device">Dispositivo central não encontrado</string>
+    <string name="alerta_device_not_found">Por favor, cheque se o dispositivo está ligado e se você está proximo a ele.</string>
+    <string name="alerta_bom">Tudo certo!</string>
+    <string name="alerta_bebe_a_salvo">Bebê a salvo :D</string>
 </resources>

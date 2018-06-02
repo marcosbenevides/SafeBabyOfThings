@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: eu.vranckaert.driver:touch-1.0.1">
+    <CLASSES>
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/touch-1.0.1.aar/6a90142de0891d898f6efd86e744e0d4/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/touch-1.0.1.aar/6a90142de0891d898f6efd86e744e0d4/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/eu.vranckaert.driver/touch/1.0.1/c6a6c6de0815bb4eba042d872aafb3bc2524aa32/touch-1.0.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

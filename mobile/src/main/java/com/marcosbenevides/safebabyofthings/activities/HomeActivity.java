@@ -134,14 +134,13 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 Log.e(TAG, "Erro ao conectaro ao servico.");
-                return;
             } else {
                 Log.e(TAG, "Servico encontrado, analisando as caracteriscidas");
                 BluetoothGattCharacteristic characteristic = mGatt
                         .getService(SERVICE_UUID)
                         .getCharacteristic(BABY_STATUS);
-                //mGatt.setCharacteristicNotification(characteristic, true);
                 mGatt.readCharacteristic(characteristic);
+                mGatt.setCharacteristicNotification(characteristic, true);
             }
         }
 
@@ -157,6 +156,7 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                //mGatt.setCharacteristicNotification(characteristic, true);
                 readBabyStatus(characteristic);
             }
         }
@@ -164,6 +164,8 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
+            if (gatt.connect())
+                readBabyStatus(characteristic);
         }
     };
 
@@ -180,7 +182,7 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
                 Log.e(TAG, "Bebê no carro!");
                 showNotification(1);
             } else {
-                //TODO: tudo certo, fechar aplicacão
+                showNotification(4);
             }
 
         }
@@ -260,7 +262,7 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
 
     private void progressStatus() {
 
-        if (progressBar.getVisibility() == View.GONE) {
+        if (progressBar.getVisibility() == View.GONE && !device_found) {
             progressBar.setVisibility(View.VISIBLE);
             device_status.setVisibility(View.GONE);
             status_search.setText(getText(R.string.searching_device));
@@ -274,11 +276,22 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
 
     private void changeStatus() {
         if (device_found) {
-            device_status.setImageDrawable(getResources().getDrawable(R.drawable.ic_check_green_48dp));
-            status_search.setText(R.string.dispositivo_encontrado);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    device_status.setImageDrawable(getResources().getDrawable(R.drawable.ic_check_green_48dp));
+                    status_search.setText(R.string.dispositivo_encontrado);
+                }
+            });
         } else {
-            device_status.setImageDrawable(getResources().getDrawable(R.drawable.ic_close_black_24dp));
-            status_search.setText(R.string.dispositivo_nao_encontrado);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    device_status.setImageDrawable(getResources().getDrawable(R.drawable.ic_close_black_24dp));
+                    status_search.setText(R.string.dispositivo_nao_encontrado);
+                    showNotification(3);
+                }
+            });
         }
     }
 
@@ -290,9 +303,9 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
                 public void run() {
                     mLeScanner.stopScan(mScanLeCallback);
                     progressStatus();
-                    callAlert();
+                    //callAlert();
                 }
-            }, 10000);
+            }, 30000);
 
             contador.increment();
             progressStatus();
@@ -325,20 +338,36 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
 
     private Notification getNotification(Integer nivel) {
 
-        if (nivel == 1) {
-            return new NotificationCompat.Builder(this, "BSOT")
-                    .setSmallIcon(R.drawable.ic_child_care_black_24dp)
-                    .setContentTitle(getResources().getString(R.string.alerta_nivel_1))
-                    .setContentText(getResources().getText(R.string.content_alerta_nivel_1))
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                    .build();
-        } else {
-            return new NotificationCompat.Builder(this, "BSOT")
-                    .setSmallIcon(R.drawable.ic_child_care_black_24dp)
-                    .setContentTitle(getResources().getString(R.string.alerta_nivel_1))
-                    .setContentText(getResources().getText(R.string.content_alerta_nivel_2))
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                    .build();
+        switch (nivel) {
+            case 1:
+                return new NotificationCompat.Builder(this, "BSOT")
+                        .setSmallIcon(R.drawable.ic_child_care_black_24dp)
+                        .setContentTitle(getResources().getString(R.string.alerta_nivel_1))
+                        .setContentText(getResources().getText(R.string.content_alerta_nivel_1))
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .build();
+            case 2:
+                return new NotificationCompat.Builder(this, "BSOT")
+                        .setSmallIcon(R.drawable.ic_child_care_black_24dp)
+                        .setContentTitle(getResources().getString(R.string.alerta_nivel_1))
+                        .setContentText(getResources().getText(R.string.content_alerta_nivel_2))
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .build();
+            case 3:
+                return new NotificationCompat.Builder(this, "BSOT")
+                        .setSmallIcon(R.drawable.ic_phonelink_off_black_24dp)
+                        .setContentTitle(getResources().getString(R.string.alerta_device))
+                        .setContentText(getResources().getText(R.string.alerta_device_not_found))
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .build();
+
+            default:
+                return new NotificationCompat.Builder(this, "BSOT")
+                        .setSmallIcon(R.drawable.ic_thumb_up_black_24dp)
+                        .setContentTitle(getResources().getString(R.string.alerta_bom))
+                        .setContentText(getResources().getText(R.string.alerta_bebe_a_salvo))
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .build();
         }
     }
 
@@ -436,7 +465,11 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
                 Log.d(TAG, "Motion detected -> " + detectedActivities.get(i).toString());
             }
 
+            if (accuracy.getType() == DetectedActivity.WALKING)
+                callAlert();
+
             Log.d(TAG, "Detected Activity with more Confidence -> " + accuracy);
+
         }
     }
 }

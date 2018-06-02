@@ -77,7 +77,7 @@ public class SplashScreen extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onStop() {
-        unregisterReceiver(myBroadcast);
+        //unregisterReceiver(myBroadcast);
         super.onStop();
     }
 
