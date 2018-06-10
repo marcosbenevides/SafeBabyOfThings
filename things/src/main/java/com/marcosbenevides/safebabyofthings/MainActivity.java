@@ -64,11 +64,13 @@ public class MainActivity extends Activity implements BroadcastCallback {
 
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
     private static final Integer ENABLE_BLUETOOTH = 1;
-    private static final UUID SERVICE_UUID = UUID.fromString("997deb98-f7fb-4ca2-a899-684c1d2aee2b");
+    private static final UUID ALERT_UUID_SERVICE = UUID.fromString("453f48fa-3de5-4694-9f19-c5564d502db7");
+    private static final UUID BABY_STATUS_UUID_SERVICE = UUID.fromString("997deb98-f7fb-4ca2-a899-684c1d2aee2b");
+    private static final UUID ALERT_MESSAGE = UUID.fromString("f512b66b-cae7-4354-b0ad-90236bd999df");
     private static final UUID BABY_STATUS = UUID.fromString("c012dcbf-a04c-4c55-8cae-28c0ac63c2bc");
     private static final String SAFEBABYOFTHINGS = "sbot";
     private static final String GPIO_PORT = "BCM3";
-    private static int BABY = 0;
+    private static int BABY = 0, TELEFONE = 998596800;
     private static String REMOTE_DEVICE_NAME = "ASUS_MARCOS";
     private Gpio mGpio;
     private String remote_device_address;
@@ -85,35 +87,6 @@ public class MainActivity extends Activity implements BroadcastCallback {
     private Handler mHandler;
     private PeripheralManager mPeripheralManager;
     private UsbHostBroadcast mReceiver;
-    private BluetoothGattServerCallback mGattServerCallback = new BluetoothGattServerCallback() {
-        @Override
-        public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
-            super.onConnectionStateChange(device, status, newState);
-
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                checkDevice(device, true);
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                checkDevice(device, false);
-            }
-
-        }
-
-        @Override
-        public void onServiceAdded(int status, BluetoothGattService service) {
-            Log.d("START", "Servidor gatt adicionado");
-            super.onServiceAdded(status, service);
-        }
-
-        @Override
-        public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
-            super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
-            Log.d("READING DATA", "Solicitacao de leitura de dados " + characteristic.getUuid().toString());
-            if (BABY_STATUS.equals(characteristic.getUuid())) {
-                mRemoteDevice = device;
-                mGattServer.sendResponse(device, requestId, GATT_SUCCESS, 0, characteristic.getValue());
-            }
-        }
-    };
     private AdvertiseCallback mAdvertisingCallback = new AdvertiseCallback() {
         @Override
         public void onStartSuccess(AdvertiseSettings settingsInEffect) {
@@ -128,6 +101,40 @@ public class MainActivity extends Activity implements BroadcastCallback {
 
         }
     };
+    private BluetoothGattServerCallback mGattServerCallback = new BluetoothGattServerCallback() {
+        @Override
+        public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
+            super.onConnectionStateChange(device, status, newState);
+
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
+                checkDevice(device, true);
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                if (mGattServer.getService(BABY_STATUS_UUID_SERVICE) != null) {
+                    if (device.getAddress().equals(mRemoteDevice.getAddress())) {
+                        changeServiceBle();
+                        checkDevice(device, false);
+                        mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
+                    }
+                }
+            }
+
+        }
+
+        @Override
+        public void onServiceAdded(int status, BluetoothGattService service) {
+            Log.d("START", "Servidor gatt adicionado");
+            super.onServiceAdded(status, service);
+        }
+
+        @Override
+        public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
+            super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
+            Log.d("READING DATA", "Solicitacao de leitura de dados " + characteristic.getUuid().toString());
+            if (BABY_STATUS.equals(characteristic.getUuid()))
+                mRemoteDevice = device;
+            mGattServer.sendResponse(device, requestId, GATT_SUCCESS, 0, characteristic.getValue());
+        }
+    };
     private GpioCallback gpioCallback = new GpioCallback() {
         @Override
         public boolean onGpioEdge(Gpio gpio) {
@@ -135,11 +142,26 @@ public class MainActivity extends Activity implements BroadcastCallback {
                 changeBabyStatus(gpio.getValue());
                 Log.e(getClass().getSimpleName(), "GPIO change -> " + gpio.getValue());
             } catch (IOException e) {
-                Log.e(MainActivity.this.getClass().getSimpleName(), "Erro ao acessar GPIO (96) " + e);
+                Log.e(MainActivity.this.getClass().getSimpleName(), "Erro ao acessar GPIO " + e);
             }
             return true;
         }
     };
+
+    private void changeServiceBle() {
+        /*
+         * Para o serviço de status do bebe
+         * */
+        mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
+        mGattServer.close();
+
+        /*
+         * Inicia o serviço de ajuda
+         * */
+        initServer(ALERT_UUID_SERVICE, ALERT_MESSAGE, TELEFONE);
+        startAdvertising(ALERT_UUID_SERVICE);
+
+    }
 
     private void checkDevice(BluetoothDevice device, boolean connected) {
 
@@ -225,8 +247,8 @@ public class MainActivity extends Activity implements BroadcastCallback {
             mBluetoothAdapter.enable();
         } else {
             Log.d(getClass().getSimpleName(), "Bluetooth already anabled");
-            initServer();
-            startAdvertising();
+            initServer(BABY_STATUS_UUID_SERVICE, BABY_STATUS, BABY);
+            startAdvertising(BABY_STATUS_UUID_SERVICE);
         }
 
     }
@@ -240,7 +262,7 @@ public class MainActivity extends Activity implements BroadcastCallback {
             status_baby.setText(getResources().getString(R.string.ausente));
         }
         if (mGattServer != null && mRemoteDevice != null) {
-            BluetoothGattCharacteristic characteristic = mGattServer.getService(SERVICE_UUID).getCharacteristic(BABY_STATUS);
+            BluetoothGattCharacteristic characteristic = mGattServer.getService(BABY_STATUS_UUID_SERVICE).getCharacteristic(BABY_STATUS);
             characteristic.setValue(ByteBuffer.allocate(4).putInt(BABY).array());
             mGattServer.notifyCharacteristicChanged(mRemoteDevice, characteristic, false);
         }
@@ -249,16 +271,6 @@ public class MainActivity extends Activity implements BroadcastCallback {
     @Override
     protected void onResume() {
         super.onResume();
-
-/*        if(mBluetoothAdapter == null || mBluetoothAdapter.getState() == BluetoothAdapter.STATE_OFF){
-
-            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivity(intent);
-            return;
-
-        }*/
-
-
     }
 
     @Override
@@ -276,7 +288,7 @@ public class MainActivity extends Activity implements BroadcastCallback {
         }
     }
 
-    private void startAdvertising() {
+    private void startAdvertising(UUID uuid) {
         mBluetoothLeAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
 
         AdvertiseSettings settings = new AdvertiseSettings.Builder()
@@ -289,14 +301,14 @@ public class MainActivity extends Activity implements BroadcastCallback {
         AdvertiseData data = new AdvertiseData.Builder()
                 .setIncludeDeviceName(true)
                 .setIncludeTxPowerLevel(false)
-                .addServiceUuid(new ParcelUuid(SERVICE_UUID))
+                .addServiceUuid(new ParcelUuid(uuid))
                 .build();
 
         mBluetoothLeAdvertiser.startAdvertising(settings, data, mAdvertisingCallback);
 
     }
 
-    private void initServer() {
+    private void initServer(UUID service, UUID characteristic, int value) {
 
         mGattServer = mBluetoothManager.openGattServer(this, mGattServerCallback);
         if (mGattServer == null) {
@@ -304,12 +316,12 @@ public class MainActivity extends Activity implements BroadcastCallback {
             return;
         }
 
-        BluetoothGattService UART_SERVICE = new BluetoothGattService(SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-        BluetoothGattCharacteristic baby_status =
-                new BluetoothGattCharacteristic(BABY_STATUS, BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, BluetoothGattCharacteristic.PERMISSION_READ);
+        BluetoothGattService UART_SERVICE = new BluetoothGattService(service, BluetoothGattService.SERVICE_TYPE_PRIMARY);
+        BluetoothGattCharacteristic service_characteristic =
+                new BluetoothGattCharacteristic(characteristic, BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, BluetoothGattCharacteristic.PERMISSION_READ);
 
-        UART_SERVICE.addCharacteristic(baby_status);
-        baby_status.setValue(ByteBuffer.allocate(4).putInt(BABY).array());
+        UART_SERVICE.addCharacteristic(service_characteristic);
+        service_characteristic.setValue(ByteBuffer.allocate(4).putInt(value).array());
 
         mGattServer.addService(UART_SERVICE);
     }
@@ -370,8 +382,6 @@ public class MainActivity extends Activity implements BroadcastCallback {
 
     @Override
     public void onBluetoothOn() {
-        initServer();
-        startAdvertising();
     }
 
     @Override
