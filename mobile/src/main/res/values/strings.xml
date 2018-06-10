@@ -5,22 +5,33 @@
     <string name="desconectado">Desconectado</string>
     <string name="conectado">Conectado</string>
     <string name="ic_connection">connection icon</string>
+    <string name="searching_device">Procurando dispositivo central …</string>
+    <string name="dispositivo_nao_encontrado">Dispositivo não encontrado!</string>
+    <string name="dispositivo_encontrado">Dispositivo encontrado!</string>
 
     <!-- Dispositivos -->
     <string name="name_device">Nome dispositivo</string>
     <string name="no_devices">Nenhum dispositivo</string>
     <string name="ic_device">device icon</string>
 
+    <!-- Estado do Bebê -->
+    <string name="ausente">Bebê Ausente</string>
+    <string name="presente">Bebê Presente</string>
+    <string name="device_status_img">Imagem para status de dispositivo</string>
+    <string name="description_baby_status">Imagem referente ao status do bebê</string>
+
+    <!-- Alertas -->
     <string name="alerta_nivel_1">CUIDADO, BEBÊ NO CARRO!</string>
     <string name="content_alerta_nivel_1">Cuidado, o bebê ainda está no carro!</string>
     <string name="content_alerta_nivel_2">Volte no carro, o bebê ainda está lá!</string>
-    <string name="explanation_resources">Para que a aplicação funcione corretamente, é necessário que você habilite as funcionalidades abaixo.</string>
-    <string name="welcome">Bem Vindo!\n Este é o Safe Baby</string>
-    <string name="searching_device">Procurando dispositivo central …</string>
-    <string name="dispositivo_nao_encontrado">Dispositivo não encontrado!</string>
-    <string name="dispositivo_encontrado">Dispositivo encontrado!</string>
-    <string name="alerta_device">Dispositivo central não encontrado</string>
     <string name="alerta_device_not_found">Por favor, cheque se o dispositivo está ligado e se você está proximo a ele.</string>
     <string name="alerta_bom">Tudo certo!</string>
     <string name="alerta_bebe_a_salvo">Bebê a salvo :D</string>
+    <string name="alerta_device">Dispositivo central não encontrado</string>
+
+    <string name="explanation_resources">Para que a aplicação funcione corretamente, é necessário que você habilite as funcionalidades abaixo.</string>
+    <string name="welcome">Bem Vindo!\n Este é o Safe Baby</string>
+    <string name="bluetooth">Bluetooth</string>
+    <string name="localizacao">Localização</string>
+    <string name="pronto">Pronto</string>
 </resources>

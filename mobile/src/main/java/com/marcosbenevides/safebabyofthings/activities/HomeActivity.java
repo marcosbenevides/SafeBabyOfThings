@@ -17,6 +17,7 @@ import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
@@ -45,10 +46,8 @@ import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.marcosbenevides.safebabyofthings.ActivityIntentService;
 import com.marcosbenevides.safebabyofthings.R;
-import com.marcosbenevides.safebabyofthings.callbacks.CountCallback;
 import com.marcosbenevides.safebabyofthings.entities.CountLeSearch;
 import com.marcosbenevides.safebabyofthings.utils.Constants;
 
@@ -57,7 +56,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class HomeActivity extends AppCompatActivity implements LocationListener, CountCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, ResultCallback<Status> {
+public class HomeActivity extends AppCompatActivity implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, ResultCallback<Status> {
 
     private static final Integer BABY_PRESENT = 1;
     private static final Integer BABY_NOT_PRESENT = 0;
@@ -66,10 +65,10 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
     private static final UUID SERVICE_UUID = UUID.fromString("997deb98-f7fb-4ca2-a899-684c1d2aee2b");
     private static final UUID BABY_STATUS = UUID.fromString("c012dcbf-a04c-4c55-8cae-28c0ac63c2bc");
     private final String TAG = getClass().getSimpleName();
-    CardView alerta;
-    ProgressBar progressBar;
-    TextView status_search;
-    ImageView device_status;
+    private CardView alerta;
+    private ProgressBar progressBar;
+    private TextView status_search, baby_description;
+    private ImageView device_status, baby_status;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothGatt mGatt;
     private Handler mHandler;
@@ -156,7 +155,6 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                //mGatt.setCharacteristicNotification(characteristic, true);
                 readBabyStatus(characteristic);
             }
         }
@@ -179,9 +177,11 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
             Log.e(TAG, " -------> Baby Status: " + last_baby_status);
 
             if (last_baby_status.equals(BABY_PRESENT)) {
+                baby_description.setText(R.string.presente);
                 Log.e(TAG, "Bebê no carro!");
                 showNotification(1);
             } else {
+                baby_description.setText(R.string.ausente);
                 showNotification(4);
             }
 
@@ -211,10 +211,10 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
         progressBar = findViewById(R.id.progress_bar);
         status_search = findViewById(R.id.status_search);
         device_status = findViewById(R.id.device_found);
+        baby_description = findViewById(R.id.description_baby_status);
+        baby_status = findViewById(R.id.image_baby);
 
         mHandler = new Handler();
-
-        contador = new CountLeSearch(this, 6);
 
         BluetoothManager mBluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
@@ -238,7 +238,6 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
 
         Intent intent = new Intent(this, ActivityIntentService.class);
         return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
     }
 
     private void configTransitions() {
@@ -248,16 +247,38 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
                         .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
                         .build()
         );
-
+        transitions.add(
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.IN_VEHICLE)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                        .build()
+        );
         transitions.add(
                 new ActivityTransition.Builder()
                         .setActivityType(DetectedActivity.WALKING)
                         .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
                         .build()
         );
-
-        Task task = mActivityRecognitionClient.requestActivityUpdates(10L, getActivityDetectionPendingIntent());
-        //ActivityTransitionRequest request = new ActivityTransitionRequest(transitions);
+        transitions.add(
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.WALKING)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                        .build()
+        );
+        transitions.add(
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.STILL)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                        .build()
+        );
+        transitions.add(
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.STILL)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                        .build()
+        );
+        mActivityRecognitionClient.requestActivityUpdates(10L, getActivityDetectionPendingIntent());
+        //mActivityRecognitionClient.requestActivityTransitionUpdates(new ActivityTransitionRequest(transitions), getActivityDetectionPendingIntent());
     }
 
     private void progressStatus() {
@@ -307,25 +328,23 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
                 }
             }, 30000);
 
-            contador.increment();
             progressStatus();
             mLeScanner.startScan(mScanLeCallback);
         } else {
             progressStatus();
             mLeScanner.stopScan(mScanLeCallback);
         }
-
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        //LocalBroadcastManager.getInstance(this).registerReceiver(mDetectionBroadcast, new IntentFilter(Constants.ACTION));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mDetectionBroadcast, new IntentFilter(Constants.ACTION));
     }
 
     @Override
     protected void onPause() {
-        //LocalBroadcastManager.getInstance(this).unregisterReceiver(mDetectionBroadcast);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mDetectionBroadcast);
         super.onPause();
     }
 
@@ -371,7 +390,10 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
         }
     }
 
-    @Override
+    private void inVehicle() {
+
+    }
+
     public void callAlert() {
         alerta.setVisibility(View.VISIBLE);
         mLeScanner.stopScan(mScanLeCallback);
@@ -455,21 +477,22 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            ArrayList<DetectedActivity> detectedActivities = intent.getParcelableArrayListExtra(Constants.EXTRA);
-            DetectedActivity accuracy = new DetectedActivity(0, 0);
-
-            for (int i = 0; i < detectedActivities.size(); i++) {
-                if (detectedActivities.get(i).getConfidence() > accuracy.getConfidence()) {
-                    accuracy = detectedActivities.get(i);
+            DetectedActivity detectedActivities = intent.getParcelableExtra(Constants.EXTRA);
+            //for (DetectedActivity activity : detectedActivities) {
+            switch (detectedActivities.getType()) {
+                case DetectedActivity.IN_VEHICLE: {
+                    inVehicle();
+                    break;
                 }
-                Log.d(TAG, "Motion detected -> " + detectedActivities.get(i).toString());
+                case DetectedActivity.WALKING: {
+                    callAlert();
+                    break;
+                }
+                default: {
+                    Log.d(TAG, "Not in vehicle and not walking, what are you doing? " + detectedActivities.toString());
+                }
             }
-
-            if (accuracy.getType() == DetectedActivity.WALKING)
-                callAlert();
-
-            Log.d(TAG, "Detected Activity with more Confidence -> " + accuracy);
-
+            //}
         }
     }
 }

@@ -13,14 +13,17 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Switch;
 
 import com.marcosbenevides.safebabyofthings.R;
@@ -37,6 +40,8 @@ public class SplashScreen extends AppCompatActivity implements View.OnClickListe
     private BluetoothAdapter mBluetoothAdapter;
     private LocationManager mLocationManager;
 
+    private ProgressBar progressBar;
+    private CardView bluetoothCard, locationCard;
     private Switch bluetooth_switch, location_switch;
     private Button next_button;
     private MyBroadcast myBroadcast;
@@ -49,6 +54,11 @@ public class SplashScreen extends AppCompatActivity implements View.OnClickListe
         bluetooth_switch = findViewById(R.id.bluetooth_switch);
         location_switch = findViewById(R.id.location_switch);
         next_button = findViewById(R.id.next_button);
+
+        bluetoothCard = findViewById(R.id.bluetooth);
+        locationCard = findViewById(R.id.location);
+
+        progressBar = findViewById(R.id.progressBar);
 
         bluetooth_switch.setOnClickListener(this);
         location_switch.setOnClickListener(this);
@@ -84,32 +94,33 @@ public class SplashScreen extends AppCompatActivity implements View.OnClickListe
     private void checkAdapters() {
         if (mBluetoothAdapter.isEnabled()) {
             change_button_state(bluetooth_switch, true);
+            dismissCard(bluetoothCard, true);
         }
         if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             change_button_state(location_switch, true);
+            dismissCard(locationCard, true);
         }
     }
 
     private void config_bluetooth() {
-
         if (!mBluetoothAdapter.isEnabled()) {
             startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
         } else {
             Log.e(TAG, "BluetoothAdapter is already enabled.");
             change_button_state(bluetooth_switch, true);
+            dismissCard(bluetoothCard, true);
         }
     }
 
     @SuppressLint("MissingPermission")
     private void config_location() {
-
-
         if (mLocationManager != null && !mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
             startActivityForResult(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS), MY_LOCATION_PERMISSION);
         } else {
             Log.d(TAG, "Locations is already enabled.");
             change_button_state(location_switch, true);
+            dismissCard(locationCard, true);
         }
     }
 
@@ -154,14 +165,21 @@ public class SplashScreen extends AppCompatActivity implements View.OnClickListe
 
     private void check_status() {
         if (mBluetoothAdapter.isEnabled() && mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            Intent intent = new Intent(this, HomeActivity.class);
-            startActivity(intent);
+            progressBar.setVisibility(View.VISIBLE);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Intent intent = new Intent(SplashScreen.this, HomeActivity.class);
+                    startActivity(intent);
+                }
+            }, 1500);
         }
     }
 
     private void change_button_state(Switch mSwitch, boolean enable) {
         Log.d(TAG, "Changing status switch: " + enable);
         mSwitch.setChecked(enable);
+        check_status();
     }
 
     @Override
@@ -173,10 +191,6 @@ public class SplashScreen extends AppCompatActivity implements View.OnClickListe
             }
             case R.id.location_switch: {
                 showPermissionRequest(new String[]{LOCATION_PERMISSION, COARSE_PERMISSION}, MY_LOCATION_PERMISSION);
-                break;
-            }
-            case R.id.next_button: {
-                check_status();
                 break;
             }
         }
@@ -194,17 +208,33 @@ public class SplashScreen extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onProviderEnabled(String provider) {
-        if (provider.equals(LocationManager.GPS_PROVIDER))
+        if (provider.equals(LocationManager.GPS_PROVIDER)) {
             change_button_state(location_switch, true);
-
+            dismissCard(locationCard, true);
+        }
     }
 
     @Override
     public void onProviderDisabled(String provider) {
 
-        if (provider.equals(LocationManager.GPS_PROVIDER))
+        if (provider.equals(LocationManager.GPS_PROVIDER)) {
             change_button_state(location_switch, false);
+            dismissCard(locationCard, false);
+        }
 
+    }
+
+    private void dismissCard(final CardView card, boolean dismiss) {
+        if (dismiss) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    card.setVisibility(View.GONE);
+                }
+            }, 500);
+        } else {
+            card.setVisibility(View.VISIBLE);
+        }
     }
 
     private class MyBroadcast extends BroadcastReceiver {
@@ -213,15 +243,15 @@ public class SplashScreen extends AppCompatActivity implements View.OnClickListe
         public void onReceive(Context context, Intent intent) {
 
             String action = intent.getAction();
-
             switch (action) {
-
                 case BluetoothAdapter.ACTION_STATE_CHANGED: {
-
-                    if (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) == BluetoothAdapter.STATE_ON)
+                    if (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) == BluetoothAdapter.STATE_ON) {
                         change_button_state(bluetooth_switch, true);
-                    else
+                        dismissCard(locationCard, true);
+                    } else {
                         change_button_state(bluetooth_switch, false);
+                        dismissCard(locationCard, false);
+                    }
                     break;
                 }
             }

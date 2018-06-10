@@ -4,13 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/primary_light"
     tools:context=".activities.SplashScreen">
 
     <android.support.v7.widget.CardView
         android:id="@+id/texto_explicativo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
+        app:cardCornerRadius="20dp"
         app:contentPadding="8dp"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -24,6 +28,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
+                android:fontFamily="casual"
                 android:text="@string/welcome"
                 android:textAlignment="center"
                 android:textAllCaps="true"
@@ -33,6 +38,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:fontFamily="casual"
                 android:text="@string/explanation_resources"
                 android:textAlignment="viewStart"
                 android:textSize="25sp" />
@@ -44,6 +50,7 @@
         android:id="@+id/bluetooth"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         app:contentPadding="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -54,9 +61,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:checked="false"
-            android:text="Bluetooth"
-            android:textOff="OFF"
-            android:textOn="ON"
+            android:fontFamily="casual"
+            android:text="@string/bluetooth"
             android:textSize="20sp"
             android:textStyle="bold" />
     </android.support.v7.widget.CardView>
@@ -65,7 +71,6 @@
         android:id="@+id/location"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         app:contentPadding="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -75,7 +80,8 @@
             android:id="@+id/location_switch"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Localização"
+            android:fontFamily="casual"
+            android:text="@string/localizacao"
             android:textSize="20sp"
             android:textStyle="bold" />
     </android.support.v7.widget.CardView>
@@ -88,9 +94,28 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:background="@color/accent"
-        android:text="Pronto"
+        android:fontFamily="casual"
+        android:text="@string/pronto"
         android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Large"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/location" />
+
 </android.support.constraint.ConstraintLayout>
