@@ -19,6 +19,7 @@ import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelUuid;
@@ -109,13 +110,13 @@ public class MainActivity extends Activity implements BroadcastCallback {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 checkDevice(device, true);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                if (mGattServer.getService(BABY_STATUS_UUID_SERVICE) != null) {
-                    if (device.getAddress().equals(mRemoteDevice.getAddress())) {
-                        changeServiceBle();
-                        checkDevice(device, false);
-                        mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
-                    }
-                }
+                //if (mGattServer.getService(BABY_STATUS_UUID_SERVICE) != null) {
+                //  if (device.getAddress().equals(mRemoteDevice.getAddress())) {
+                changeServiceBle();
+                checkDevice(device, false);
+                mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
+                //}
+                //}
             }
 
         }
@@ -247,8 +248,8 @@ public class MainActivity extends Activity implements BroadcastCallback {
             mBluetoothAdapter.enable();
         } else {
             Log.d(getClass().getSimpleName(), "Bluetooth already anabled");
-            initServer(BABY_STATUS_UUID_SERVICE, BABY_STATUS, BABY);
-            startAdvertising(BABY_STATUS_UUID_SERVICE);
+            //initServer(BABY_STATUS_UUID_SERVICE, BABY_STATUS, BABY);
+            //startAdvertising(BABY_STATUS_UUID_SERVICE);
         }
 
     }
@@ -257,11 +258,22 @@ public class MainActivity extends Activity implements BroadcastCallback {
         if (on) {
             BABY = 1;
             status_baby.setText(getResources().getString(R.string.presente));
+            if (mGattServer != null) {
+                mGattServer.close();
+                mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
+            }
+            initServer(BABY_STATUS_UUID_SERVICE, BABY_STATUS, BABY);
+            startAdvertising(BABY_STATUS_UUID_SERVICE);
         } else {
             BABY = 0;
             status_baby.setText(getResources().getString(R.string.ausente));
+            if (mGattServer != null && mGattServer.getService(ALERT_UUID_SERVICE) != null) {
+                Log.d(getLocalClassName(),"Bebê resgatado!");
+                mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
+                mGattServer.close();
+            }
         }
-        if (mGattServer != null && mRemoteDevice != null) {
+        if (mGattServer != null && mRemoteDevice != null && mGattServer.getService(BABY_STATUS_UUID_SERVICE) != null) {
             BluetoothGattCharacteristic characteristic = mGattServer.getService(BABY_STATUS_UUID_SERVICE).getCharacteristic(BABY_STATUS);
             characteristic.setValue(ByteBuffer.allocate(4).putInt(BABY).array());
             mGattServer.notifyCharacteristicChanged(mRemoteDevice, characteristic, false);

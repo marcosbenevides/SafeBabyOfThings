@@ -94,7 +94,6 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
                 Log.e(TAG, "Results Match " + result.getDevice().getAddress());
                 device_found = true;
                 connectToSafeBaby(result.getDevice());
-                contador.zerar();
                 scanBabySafe(false);
             }
         }
@@ -177,14 +176,24 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
             Log.e(TAG, " -------> Baby Status: " + last_baby_status);
 
             if (last_baby_status.equals(BABY_PRESENT)) {
-                baby_description.setText(R.string.presente);
-                Log.e(TAG, "Bebê no carro!");
-                showNotification(1);
-            } else {
-                baby_description.setText(R.string.ausente);
-                showNotification(4);
-            }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        baby_description.setText(R.string.presente);
+                        Log.e(TAG, "Bebê no carro!");
+                        showNotification(1);
+                    }
+                });
 
+            } else {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        baby_description.setText(R.string.ausente);
+                        showNotification(4);
+                    }
+                });
+            }
         }
     }
 
@@ -274,6 +283,18 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
         transitions.add(
                 new ActivityTransition.Builder()
                         .setActivityType(DetectedActivity.STILL)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                        .build()
+        );
+        transitions.add(
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.ON_FOOT)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                        .build()
+        );
+        transitions.add(
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.ON_FOOT)
                         .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
                         .build()
         );
@@ -485,6 +506,10 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
                     break;
                 }
                 case DetectedActivity.WALKING: {
+                    callAlert();
+                    break;
+                }
+                case DetectedActivity.ON_FOOT: {
                     callAlert();
                     break;
                 }
