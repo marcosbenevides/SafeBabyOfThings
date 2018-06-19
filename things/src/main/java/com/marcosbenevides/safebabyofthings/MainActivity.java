@@ -19,7 +19,6 @@ import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
-import android.nfc.Tag;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelUuid;
@@ -70,10 +69,11 @@ public class MainActivity extends Activity implements BroadcastCallback {
     private static final UUID ALERT_MESSAGE = UUID.fromString("f512b66b-cae7-4354-b0ad-90236bd999df");
     private static final UUID BABY_STATUS = UUID.fromString("c012dcbf-a04c-4c55-8cae-28c0ac63c2bc");
     private static final String SAFEBABYOFTHINGS = "sbot";
-    private static final String GPIO_PORT = "BCM3";
+    private static final String GPIO_PORT_BABY = "BCM3";
+    private static final String GPIO_PORT_ALERT = "BCM4";
     private static int BABY = 0, TELEFONE = 998596800;
     private static String REMOTE_DEVICE_NAME = "ASUS_MARCOS";
-    private Gpio mGpio;
+    private Gpio mGpioBaby, mGpioAlert;
     private String remote_device_address;
     private TextView connection_status, device_name, status_baby;
     private CardView alarm;
@@ -110,13 +110,13 @@ public class MainActivity extends Activity implements BroadcastCallback {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 checkDevice(device, true);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                //if (mGattServer.getService(BABY_STATUS_UUID_SERVICE) != null) {
-                //  if (device.getAddress().equals(mRemoteDevice.getAddress())) {
-                changeServiceBle();
-                checkDevice(device, false);
-                mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
-                //}
-                //}
+                if (mGattServer.getService(BABY_STATUS_UUID_SERVICE) != null) {
+                    //  if (device.getAddress().equals(mRemoteDevice.getAddress())) {
+                    changeServiceBle();
+                    checkDevice(device, false);
+                    mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
+                    //}
+                }
             }
 
         }
@@ -161,6 +161,11 @@ public class MainActivity extends Activity implements BroadcastCallback {
          * */
         initServer(ALERT_UUID_SERVICE, ALERT_MESSAGE, TELEFONE);
         startAdvertising(ALERT_UUID_SERVICE);
+        try {
+            mGpioAlert.setValue(true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -218,15 +223,19 @@ public class MainActivity extends Activity implements BroadcastCallback {
                 Log.d(getClass().getSimpleName(), "GPIO avaliable port " + list);
             }
 
-            mGpio = mPeripheralManager.openGpio(GPIO_PORT);
-            mGpio.setDirection(Gpio.DIRECTION_IN);
-            mGpio.setActiveType(Gpio.ACTIVE_HIGH);
-            mGpio.setEdgeTriggerType(Gpio.EDGE_BOTH);
-            mGpio.registerGpioCallback(gpioCallback);
+            mGpioBaby = mPeripheralManager.openGpio(GPIO_PORT_BABY);
+            mGpioBaby.setDirection(Gpio.DIRECTION_IN);
+            mGpioBaby.setActiveType(Gpio.ACTIVE_HIGH);
+            mGpioBaby.setEdgeTriggerType(Gpio.EDGE_BOTH);
+            mGpioBaby.registerGpioCallback(gpioCallback);
 
-            changeBabyStatus(mGpio.getValue());
+            mGpioAlert = mPeripheralManager.openGpio(GPIO_PORT_ALERT);
+            mGpioAlert.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
+            mGpioAlert.setActiveType(Gpio.ACTIVE_HIGH);
 
-            Log.i(getClass().getSimpleName(), "BABY STATUS IS -> " + mGpio.getValue());
+            changeBabyStatus(mGpioBaby.getValue());
+
+            Log.i(getClass().getSimpleName(), "BABY STATUS IS -> " + mGpioBaby.getValue());
         } catch (IOException ex) {
             Log.e(getClass().getSimpleName(), "Erro ao abrir porta -> " + ex.getMessage());
         }
@@ -268,16 +277,23 @@ public class MainActivity extends Activity implements BroadcastCallback {
             BABY = 0;
             status_baby.setText(getResources().getString(R.string.ausente));
             if (mGattServer != null && mGattServer.getService(ALERT_UUID_SERVICE) != null) {
-                Log.d(getLocalClassName(),"Bebê resgatado!");
+                Log.d(getLocalClassName(), "Bebê resgatado!");
                 mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
                 mGattServer.close();
             }
+            try {
+                mGpioAlert.setValue(false);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (mGattServer != null && mRemoteDevice != null && mGattServer.getService(BABY_STATUS_UUID_SERVICE) != null) {
+                BluetoothGattCharacteristic characteristic = mGattServer.getService(BABY_STATUS_UUID_SERVICE).getCharacteristic(BABY_STATUS);
+                characteristic.setValue(ByteBuffer.allocate(4).putInt(BABY).array());
+                mGattServer.notifyCharacteristicChanged(mRemoteDevice, characteristic, false);
+            }
         }
-        if (mGattServer != null && mRemoteDevice != null && mGattServer.getService(BABY_STATUS_UUID_SERVICE) != null) {
-            BluetoothGattCharacteristic characteristic = mGattServer.getService(BABY_STATUS_UUID_SERVICE).getCharacteristic(BABY_STATUS);
-            characteristic.setValue(ByteBuffer.allocate(4).putInt(BABY).array());
-            mGattServer.notifyCharacteristicChanged(mRemoteDevice, characteristic, false);
-        }
+
     }
 
     @Override
@@ -290,10 +306,10 @@ public class MainActivity extends Activity implements BroadcastCallback {
         super.onDestroy();
         unregisterReceiver(mReceiver);
         mBluetoothAdapter.disable();
-        if (mGpio != null) {
+        if (mGpioBaby != null) {
             try {
-                mGpio.close();
-                mGpio = null;
+                mGpioBaby.close();
+                mGpioBaby = null;
             } catch (IOException ex) {
                 Log.w(getClass().getSimpleName(), "Erro ao fechar porta GPIO " + ex);
             }
@@ -407,7 +423,7 @@ public class MainActivity extends Activity implements BroadcastCallback {
     @Override
     protected void onStop() {
         super.onStop();
-        mGpio.unregisterGpioCallback(gpioCallback);
+        mGpioBaby.unregisterGpioCallback(gpioCallback);
         if (mBluetoothLeAdvertiser != null)
             mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
         if (mGattServer != null)

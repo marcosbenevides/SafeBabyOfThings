@@ -247,10 +247,10 @@ public class SplashScreen extends AppCompatActivity implements View.OnClickListe
                 case BluetoothAdapter.ACTION_STATE_CHANGED: {
                     if (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) == BluetoothAdapter.STATE_ON) {
                         change_button_state(bluetooth_switch, true);
-                        dismissCard(locationCard, true);
+                        dismissCard(bluetoothCard, true);
                     } else {
                         change_button_state(bluetooth_switch, false);
-                        dismissCard(locationCard, false);
+                        dismissCard(bluetoothCard, false);
                     }
                     break;
                 }
