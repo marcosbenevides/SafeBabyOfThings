@@ -112,7 +112,7 @@ public class MainActivity extends Activity implements BroadcastCallback {
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 if (mGattServer.getService(BABY_STATUS_UUID_SERVICE) != null) {
                     //  if (device.getAddress().equals(mRemoteDevice.getAddress())) {
-                    changeServiceBle();
+                    //changeServiceBle();
                     checkDevice(device, false);
                     mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
                     //}
@@ -271,8 +271,8 @@ public class MainActivity extends Activity implements BroadcastCallback {
                 mGattServer.close();
                 mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
             }
-            initServer(BABY_STATUS_UUID_SERVICE, BABY_STATUS, BABY);
-            startAdvertising(BABY_STATUS_UUID_SERVICE);
+            initServer(ALERT_UUID_SERVICE, ALERT_MESSAGE, TELEFONE);
+            startAdvertising(ALERT_UUID_SERVICE);
         } else {
             BABY = 0;
             status_baby.setText(getResources().getString(R.string.ausente));

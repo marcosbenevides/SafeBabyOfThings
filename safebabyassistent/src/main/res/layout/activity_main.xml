@@ -8,6 +8,38 @@
     tools:context=".MainActivity">
 
     <android.support.v7.widget.CardView
+        android:id="@+id/alertCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        app:cardCornerRadius="15dp"
+        app:cardElevation="5dp"
+        app:contentPadding="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="casual"
+                android:text="Para a aplicação funcionar corretamente, ative as funções abaixo:"
+                android:textAlignment="center"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
+    <android.support.v7.widget.CardView
         android:id="@+id/bluetoothCard"
         android:layout_width="match_parent"
         android:layout_height="50dp"
@@ -19,7 +51,7 @@
         app:contentPadding="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/alertCard">
 
         <Switch
             android:id="@+id/bluetoothSwitch"
@@ -30,7 +62,8 @@
             android:switchMinWidth="50dp"
             android:text="Bluetooth"
             android:textAllCaps="true"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:thumb="@drawable/baby" />
     </android.support.v7.widget.CardView>
 
     <android.support.v7.widget.CardView
@@ -56,19 +89,33 @@
             android:switchMinWidth="50dp"
             android:text="Localização"
             android:textAllCaps="true"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:thumb="@drawable/baby" />
     </android.support.v7.widget.CardView>
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/locationCard" />
+
     <android.support.v7.widget.CardView
-        android:id="@+id/alertCard"
+        android:id="@+id/messageCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="@color/accent"
         app:cardCornerRadius="15dp"
         app:cardElevation="5dp"
         app:contentPadding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/locationCard">
@@ -78,12 +125,44 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <ImageView
-                android:layout_width="wrap_content"
+            <TextView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                />
+                android:drawableEnd="@android:drawable/ic_dialog_alert"
+                android:drawableStart="@android:drawable/ic_dialog_alert"
+                android:fontFamily="casual"
+                android:gravity="center"
+                android:text="EMERGÊNCIA"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="casual"
+                android:gravity="center"
+                android:text="Alguem esqueceu o bebê no carro, clique no número abaixo para ligar para o responsável e avisá-lo!"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/telefone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autoLink="phone"
+                android:drawableStart="@drawable/ic_local_phone_black_24dp"
+                android:text="(31) 99999-9999"
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:textSize="24sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 
+
     </android.support.v7.widget.CardView>
+
+
 </android.support.constraint.ConstraintLayout>
