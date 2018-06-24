@@ -8,17 +8,16 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
-import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.UUID;
 
 public class BabySafeService extends IntentService {
@@ -32,17 +31,7 @@ public class BabySafeService extends IntentService {
     private BluetoothGatt mBluetoothGatt;
     private int alert_result;
     private BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback() {
-        /**
-         * Callback indicating when GATT client has connected/disconnected to/from a remote
-         * GATT server.
-         *
-         * @param gatt     GATT client
-         * @param status   Status of the connect or disconnect operation.
-         *                 {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
-         * @param newState Returns the new connection state. Can be one of
-         *                 {@link BluetoothProfile#STATE_DISCONNECTED} or
-         *                 {@link BluetoothProfile#STATE_CONNECTED}
-         */
+
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (newState == BluetoothGatt.STATE_CONNECTED) {
@@ -52,38 +41,17 @@ public class BabySafeService extends IntentService {
             super.onConnectionStateChange(gatt, status, newState);
         }
 
-        /**
-         * Callback reporting the result of a characteristic read operation.
-         *
-         * @param gatt           GATT client invoked {@link BluetoothGatt#readCharacteristic}
-         * @param characteristic Characteristic that was read from the associated
-         *                       remote device.
-         * @param status         {@link BluetoothGatt#GATT_SUCCESS} if the read operation
-         */
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             readCharacteristic(characteristic);
             super.onCharacteristicRead(gatt, characteristic, status);
         }
 
-        /**
-         * Callback triggered as a result of a remote characteristic notification.
-         *
-         * @param gatt           GATT client the characteristic is associated with
-         * @param characteristic Characteristic that has been updated as a result
-         */
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
         }
 
-        /**
-         * Callback invoked when the list of remote services, characteristics and descriptors
-         * for the remote device have been updated, ie new services have been discovered.
-         *
-         * @param gatt   GATT client invoked {@link BluetoothGatt#discoverServices}
-         * @param status {@link BluetoothGatt#GATT_SUCCESS} if the remote device
-         */
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             BluetoothGattCharacteristic characteristic = gatt
@@ -94,22 +62,20 @@ public class BabySafeService extends IntentService {
         }
     };
     private ScanCallback mLeScanCallback = new ScanCallback() {
-        /**
-         * Callback when a BLE advertisement has been found.
-         *
-         * @param callbackType Determines how this callback was triggered. Could be one of
-         *                     {@link ScanSettings#CALLBACK_TYPE_ALL_MATCHES},
-         *                     {@link ScanSettings#CALLBACK_TYPE_FIRST_MATCH} or
-         *                     {@link ScanSettings#CALLBACK_TYPE_MATCH_LOST}
-         * @param result       A Bluetooth LE scan result.
-         */
+
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
-
             Log.d(TAG, "Scan found devices -> " + result.getDevice().getAddress());
-            connectBLE(result.getDevice());
+            if (result.getDevice().getName() != null && result.getDevice().getName().equalsIgnoreCase("sbot")) {
+                connectBLE(result.getDevice());
+                mBluetoothLeScanner.stopScan(mLeScanCallback);
+            }
+            //super.onScanResult(callbackType, result);
+        }
 
-            super.onScanResult(callbackType, result);
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
+            super.onBatchScanResults(results);
         }
     };
 
@@ -153,8 +119,10 @@ public class BabySafeService extends IntentService {
 
     private void connectBLE(BluetoothDevice device) {
 
+        //mBluetoothLeScanner.stopScan(mLeScanCallback);
         Log.d(TAG, "Connecting device -> " + device.getAddress());
-        mBluetoothGatt = device.connectGatt(this, false, mBluetoothGattCallback);
+        BluetoothDevice remote = mBluetoothAdapter.getRemoteDevice(device.getAddress());
+        mBluetoothGatt = remote.connectGatt(this, false, mBluetoothGattCallback);
 
     }
 

@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private LocationManager mLocationManager;
     private MyBroadcast myBroadcast;
     private BroadcastIntent broadcastIntent;
+    private Intent intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -164,7 +165,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             textCard.setVisibility(View.GONE);
             progressBar.setVisibility(View.VISIBLE);
             new Handler().postDelayed(() -> {
-                Intent intent = new Intent();
+                intent = new Intent();
                 intent.setClass(this, BabySafeService.class);
                 intent.putExtra("StartService", 1);
                 startService(intent);
@@ -281,11 +282,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            progressBar.setVisibility(View.GONE);
-            Integer message = intent.getIntExtra("BABYSAFESERVICE",0);
-
-            messageCard.setVisibility(View.VISIBLE);
-            telefone.setText(message);
+            Integer message = intent.getIntExtra("BABYSAFESERVICE", 0);
+            runOnUiThread(() -> {
+                telefone.setText(String.valueOf(message));
+                progressBar.setVisibility(View.GONE);
+                messageCard.setVisibility(View.VISIBLE);
+            });
+            //stopService(intent);
         }
     }
 }

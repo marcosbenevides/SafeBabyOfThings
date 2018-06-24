@@ -30,7 +30,7 @@
     <string name="alerta_device">Dispositivo central não encontrado</string>
 
     <string name="explanation_resources">Para que a aplicação funcione corretamente, é necessário que você habilite as funcionalidades abaixo.</string>
-    <string name="welcome">Bem Vindo!\n Este é o Safe Baby</string>
+    <string name="welcome">Bem Vindo.\n Este é o Safe Baby</string>
     <string name="bluetooth">Bluetooth</string>
     <string name="localizacao">Localização</string>
     <string name="pronto">Pronto</string>
