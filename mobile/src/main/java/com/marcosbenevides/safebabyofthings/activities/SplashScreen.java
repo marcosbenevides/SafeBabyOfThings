@@ -41,7 +41,7 @@ public class SplashScreen extends AppCompatActivity implements View.OnClickListe
     private LocationManager mLocationManager;
 
     private ProgressBar progressBar;
-    private CardView bluetoothCard, locationCard;
+    private CardView bluetoothCard, locationCard, welcome;
     private Switch bluetooth_switch, location_switch;
     private Button next_button;
     private MyBroadcast myBroadcast;
@@ -51,6 +51,7 @@ public class SplashScreen extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
 
+        welcome = findViewById(R.id.texto_explicativo);
         bluetooth_switch = findViewById(R.id.bluetooth_switch);
         location_switch = findViewById(R.id.location_switch);
         next_button = findViewById(R.id.next_button);
@@ -165,6 +166,7 @@ public class SplashScreen extends AppCompatActivity implements View.OnClickListe
 
     private void check_status() {
         if (mBluetoothAdapter.isEnabled() && mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            welcome.setVisibility(View.GONE);
             progressBar.setVisibility(View.VISIBLE);
             new Handler().postDelayed(new Runnable() {
                 @Override
@@ -173,6 +175,8 @@ public class SplashScreen extends AppCompatActivity implements View.OnClickListe
                     startActivity(intent);
                 }
             }, 1500);
+        } else {
+            welcome.setVisibility(View.VISIBLE);
         }
     }
 

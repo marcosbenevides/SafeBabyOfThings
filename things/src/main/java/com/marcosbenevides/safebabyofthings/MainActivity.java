@@ -33,7 +33,9 @@ import com.google.android.things.pio.GpioCallback;
 import com.google.android.things.pio.PeripheralManager;
 import com.marcosbenevides.safebabyofthings.callback.BroadcastCallback;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,7 +77,7 @@ public class MainActivity extends Activity implements BroadcastCallback {
     private static String REMOTE_DEVICE_NAME = "ASUS_MARCOS";
     private Gpio mGpioBaby, mGpioAlert;
     private String remote_device_address;
-    private TextView connection_status, device_name, status_baby;
+    private TextView connection_status, device_name, status_baby, name, address, service_name, log;
     private CardView alarm;
     private BluetoothDevice mRemoteDevice;
     private UsbDevice deviceConnected;
@@ -107,14 +109,12 @@ public class MainActivity extends Activity implements BroadcastCallback {
         public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
             super.onConnectionStateChange(device, status, newState);
 
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                checkDevice(device, true);
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                if (mGattServer.getService(BABY_STATUS_UUID_SERVICE) != null) {
-                    //  if (device.getAddress().equals(mRemoteDevice.getAddress())) {
-                    //changeServiceBle();
+            if (mGattServer.getService(BABY_STATUS_UUID_SERVICE) != null) {
+                if (newState == BluetoothProfile.STATE_CONNECTED) {
+                    checkDevice(device, true);
+                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                    changeServiceBle();
                     checkDevice(device, false);
-                    mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
                     //}
                 }
             }
@@ -154,7 +154,7 @@ public class MainActivity extends Activity implements BroadcastCallback {
          * Para o serviço de status do bebe
          * */
         mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
-        mGattServer.close();
+        mGattServer.clearServices();
 
         /*
          * Inicia o serviço de ajuda
@@ -166,7 +166,6 @@ public class MainActivity extends Activity implements BroadcastCallback {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     private void checkDevice(BluetoothDevice device, boolean connected) {
@@ -203,6 +202,26 @@ public class MainActivity extends Activity implements BroadcastCallback {
         connection_status = findViewById(R.id.connection_status);
         device_name = findViewById(R.id.device_name);
         alarm = findViewById(R.id.alarm);
+        name = findViewById(R.id.name);
+        address = findViewById(R.id.address);
+        service_name = findViewById(R.id.service);
+        log = findViewById(R.id.log);
+
+        try {
+            Process process = Runtime.getRuntime().exec("logcat -d");
+            BufferedReader bufferedReader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()));
+
+            StringBuilder stringBuilder = new StringBuilder();
+            String line = "";
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append("\n").append(line);
+            }
+            log.setText(stringBuilder.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
 
         mHandler = new Handler();
 
@@ -211,8 +230,13 @@ public class MainActivity extends Activity implements BroadcastCallback {
         mBluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         if (mBluetoothManager != null) {
             mBluetoothAdapter = mBluetoothManager.getAdapter();
+            mBluetoothAdapter.enable();
         }
         mBluetoothAdapter.setName(SAFEBABYOFTHINGS);
+        name.setText(mBluetoothAdapter.getName());
+
+        address.setText(mBluetoothAdapter.getAddress());
+
 
         try {
             mPeripheralManager = PeripheralManager.getInstance();
@@ -252,15 +276,6 @@ public class MainActivity extends Activity implements BroadcastCallback {
         registerReceiver(mReceiver, permission);
         registerReceiver(mReceiver, bluetooth_filter);
 
-        if (!mBluetoothAdapter.isEnabled()) {
-            Log.d(getClass().getSimpleName(), "Bluetooth disabled, enabling ...");
-            mBluetoothAdapter.enable();
-        } else {
-            Log.d(getClass().getSimpleName(), "Bluetooth already anabled");
-            //initServer(BABY_STATUS_UUID_SERVICE, BABY_STATUS, BABY);
-            //startAdvertising(BABY_STATUS_UUID_SERVICE);
-        }
-
     }
 
     private void changeBabyStatus(boolean on) {
@@ -269,10 +284,11 @@ public class MainActivity extends Activity implements BroadcastCallback {
             status_baby.setText(getResources().getString(R.string.presente));
             if (mGattServer != null) {
                 mGattServer.close();
+                mGattServer = null;
                 mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
             }
-            initServer(ALERT_UUID_SERVICE, ALERT_MESSAGE, TELEFONE);
-            startAdvertising(ALERT_UUID_SERVICE);
+            initServer(BABY_STATUS_UUID_SERVICE, BABY_STATUS, BABY);
+            startAdvertising(BABY_STATUS_UUID_SERVICE);
         } else {
             BABY = 0;
             status_baby.setText(getResources().getString(R.string.ausente));
@@ -280,6 +296,7 @@ public class MainActivity extends Activity implements BroadcastCallback {
                 Log.d(getLocalClassName(), "Bebê resgatado!");
                 mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
                 mGattServer.close();
+                mGattServer = null;
             }
             try {
                 mGpioAlert.setValue(false);
@@ -428,5 +445,15 @@ public class MainActivity extends Activity implements BroadcastCallback {
             mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
         if (mGattServer != null)
             mGattServer.close();
+    }
+
+    private void setLog(String text, boolean breakLine) {
+
+        if (breakLine) {
+            log.append("\n" + text);
+        } else {
+            log.append(text);
+        }
+
     }
 }

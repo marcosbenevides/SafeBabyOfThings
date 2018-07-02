@@ -60,7 +60,7 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
 
     private static final Integer BABY_PRESENT = 1;
     private static final Integer BABY_NOT_PRESENT = 0;
-    private static final String DEVICE_ADDRESS = "72:7E:A1:22:C3:CE";
+    private static final String DEVICE_ADDRESS = "5B:44:FF:EF:34:E5";
     private static final String DEVICE_NAME = "sbot";
     private static final UUID SERVICE_UUID = UUID.fromString("997deb98-f7fb-4ca2-a899-684c1d2aee2b");
     private static final UUID BABY_STATUS = UUID.fromString("c012dcbf-a04c-4c55-8cae-28c0ac63c2bc");
@@ -89,7 +89,7 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
     private ScanCallback mScanLeCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
-            Log.e(TAG, "OnResultCallback " + result.getDevice().getName());
+            Log.e(TAG, "OnResultCallback " + result.getDevice().getName() + " - " + result.getDevice().getAddress());
             if (result.getDevice().getName() != null && result.getDevice().getName().equalsIgnoreCase(DEVICE_NAME)) {
                 Log.e(TAG, "Results Match " + result.getDevice().getAddress());
                 device_found = true;
@@ -134,11 +134,11 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
                 Log.e(TAG, "Erro ao conectaro ao servico.");
             } else {
                 Log.e(TAG, "Servico encontrado, analisando as caracteriscidas");
-                BluetoothGattCharacteristic characteristic = mGatt
+                BluetoothGattCharacteristic characteristic = gatt
                         .getService(SERVICE_UUID)
                         .getCharacteristic(BABY_STATUS);
-                mGatt.readCharacteristic(characteristic);
-                mGatt.setCharacteristicNotification(characteristic, true);
+                gatt.readCharacteristic(characteristic);
+                gatt.setCharacteristicNotification(characteristic, true);
             }
         }
 
