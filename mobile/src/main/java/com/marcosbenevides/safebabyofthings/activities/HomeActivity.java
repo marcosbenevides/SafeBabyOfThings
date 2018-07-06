@@ -20,6 +20,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Location;
 import android.location.LocationListener;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -85,37 +86,9 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
     private CountLeSearch contador;
     private Integer last_baby_status = 1;
 
+    private MediaPlayer mediaPlayer;
+
     private BluetoothLeScanner mLeScanner;
-    private ScanCallback mScanLeCallback = new ScanCallback() {
-        @Override
-        public void onScanResult(int callbackType, ScanResult result) {
-            Log.e(TAG, "OnResultCallback " + result.getDevice().getName() + " - " + result.getDevice().getAddress());
-            if (result.getDevice().getName() != null && result.getDevice().getName().equalsIgnoreCase(DEVICE_NAME)) {
-                Log.e(TAG, "Results Match " + result.getDevice().getAddress());
-                device_found = true;
-                connectToSafeBaby(result.getDevice());
-                scanBabySafe(false);
-            }
-        }
-
-        @Override
-        public void onBatchScanResults(List<ScanResult> results) {
-            if (!results.isEmpty()) {
-
-                ScanResult result = results.get(0);
-                BluetoothDevice device = result.getDevice();
-
-                connectToSafeBaby(device);
-
-            }
-        }
-
-        @Override
-        public void onScanFailed(int errorCode) {
-            Log.e(TAG, "Erro ao iniciar o scan " + errorCode);
-            super.onScanFailed(errorCode);
-        }
-    };
     private BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -165,6 +138,36 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
                 readBabyStatus(characteristic);
         }
     };
+    private ScanCallback mScanLeCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            Log.e(TAG, "OnResultCallback " + result.getDevice().getName() + " - " + result.getDevice().getAddress());
+            if (result.getDevice().getName() != null && result.getDevice().getName().equalsIgnoreCase(DEVICE_NAME)) {
+                Log.e(TAG, "Results Match " + result.getDevice().getAddress());
+                device_found = true;
+                connectToSafeBaby(result.getDevice());
+                scanBabySafe(false);
+            }
+        }
+
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
+            if (!results.isEmpty()) {
+
+                ScanResult result = results.get(0);
+                BluetoothDevice device = result.getDevice();
+
+                connectToSafeBaby(device);
+
+            }
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            Log.e(TAG, "Erro ao iniciar o scan " + errorCode);
+            super.onScanFailed(errorCode);
+        }
+    };
 
     private void readBabyStatus(BluetoothGattCharacteristic characteristic) {
         if (BABY_STATUS.equals(characteristic.getUuid())) {
@@ -191,6 +194,10 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
                     public void run() {
                         baby_description.setText(R.string.ausente);
                         showNotification(4);
+                        if (mediaPlayer.isPlaying()) {
+                            mediaPlayer.stop();
+                            mediaPlayer.release();
+                        }
                     }
                 });
             }
@@ -224,6 +231,8 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
         baby_status = findViewById(R.id.image_baby);
 
         mHandler = new Handler();
+
+        mediaPlayer = MediaPlayer.create(this, R.raw.alarm);
 
         BluetoothManager mBluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
@@ -419,6 +428,8 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
         alerta.setVisibility(View.VISIBLE);
         mLeScanner.stopScan(mScanLeCallback);
         showNotification(2);
+        mediaPlayer.setLooping(true);
+        mediaPlayer.start();
     }
 
     @SuppressLint("MissingPermission")
