@@ -2,6 +2,7 @@ package marcosbenevides.safebabyassistent.com;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Notification;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
@@ -13,11 +14,15 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
@@ -26,6 +31,9 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
+
+import static android.media.RingtoneManager.TYPE_ALARM;
+import static android.media.RingtoneManager.TYPE_NOTIFICATION;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
@@ -257,6 +265,22 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     }
 
+    private void notification(Integer telefone) {
+
+        NotificationManagerCompat man = NotificationManagerCompat.from(this);
+        Uri alarmSound = RingtoneManager.getDefaultUri(TYPE_NOTIFICATION);
+
+        Notification notification = new NotificationCompat.Builder(this, "BSOT")
+                .setSmallIcon(R.drawable.ic_child_care_black_24dp)
+                .setContentTitle("Atenção!")
+                .setContentText(String.format("Ligue já no %d, criança esquecida no veículo!", telefone))
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setSound(alarmSound)
+                .build();
+        man.notify(0, notification);
+
+    }
+
     private class MyBroadcast extends BroadcastReceiver {
 
         @Override
@@ -287,6 +311,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 telefone.setText(String.valueOf(message));
                 progressBar.setVisibility(View.GONE);
                 messageCard.setVisibility(View.VISIBLE);
+                notification(message);
             });
             //stopService(intent);
         }

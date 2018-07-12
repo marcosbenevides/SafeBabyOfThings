@@ -19,6 +19,7 @@ import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelUuid;
@@ -75,6 +76,7 @@ public class MainActivity extends Activity implements BroadcastCallback {
     private static final String GPIO_PORT_ALERT = "BCM4";
     private static int BABY = 0, TELEFONE = 998596800;
     private static String REMOTE_DEVICE_NAME = "ASUS_MARCOS";
+    private MediaPlayer mediaPlayer;
     private Gpio mGpioBaby, mGpioAlert;
     private String remote_device_address;
     private TextView connection_status, device_name, status_baby, name, address, service_name, log;
@@ -161,6 +163,10 @@ public class MainActivity extends Activity implements BroadcastCallback {
          * */
         initServer(ALERT_UUID_SERVICE, ALERT_MESSAGE, TELEFONE);
         startAdvertising(ALERT_UUID_SERVICE);
+        //inicia som de alarme
+        mediaPlayer = MediaPlayer.create(this, R.raw.alarm);
+        mediaPlayer.setLooping(true);
+        mediaPlayer.start();
         try {
             mGpioAlert.setValue(true);
         } catch (IOException e) {
@@ -206,6 +212,8 @@ public class MainActivity extends Activity implements BroadcastCallback {
         address = findViewById(R.id.address);
         service_name = findViewById(R.id.service);
         log = findViewById(R.id.log);
+        mediaPlayer = MediaPlayer.create(this, R.raw.alarm);
+        mediaPlayer.setLooping(true);
 
         try {
             Process process = Runtime.getRuntime().exec("logcat -d");
@@ -282,6 +290,7 @@ public class MainActivity extends Activity implements BroadcastCallback {
         if (on) {
             BABY = 1;
             status_baby.setText(getResources().getString(R.string.presente));
+            alarm.setVisibility(View.GONE);
             if (mGattServer != null) {
                 mGattServer.close();
                 mGattServer = null;
@@ -297,6 +306,10 @@ public class MainActivity extends Activity implements BroadcastCallback {
                 mBluetoothLeAdvertiser.stopAdvertising(mAdvertisingCallback);
                 mGattServer.close();
                 mGattServer = null;
+            }
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+                mediaPlayer.release();
             }
             try {
                 mGpioAlert.setValue(false);

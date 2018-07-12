@@ -21,6 +21,8 @@ import android.content.IntentFilter;
 import android.location.Location;
 import android.location.LocationListener;
 import android.media.MediaPlayer;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -56,6 +58,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import static android.media.RingtoneManager.TYPE_ALARM;
+import static android.media.RingtoneManager.TYPE_NOTIFICATION;
 
 public class HomeActivity extends AppCompatActivity implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, ResultCallback<Status> {
 
@@ -387,6 +392,9 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
 
     private Notification getNotification(Integer nivel) {
 
+        Uri notificationSound = RingtoneManager.getDefaultUri(TYPE_NOTIFICATION);
+        Uri alarmSound = RingtoneManager.getDefaultUri(TYPE_ALARM);
+
         switch (nivel) {
             case 1:
                 return new NotificationCompat.Builder(this, "BSOT")
@@ -394,12 +402,14 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
                         .setContentTitle(getResources().getString(R.string.alerta_nivel_1))
                         .setContentText(getResources().getText(R.string.content_alerta_nivel_1))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setSound(notificationSound)
                         .build();
             case 2:
                 return new NotificationCompat.Builder(this, "BSOT")
                         .setSmallIcon(R.drawable.ic_child_care_black_24dp)
                         .setContentTitle(getResources().getString(R.string.alerta_nivel_1))
                         .setContentText(getResources().getText(R.string.content_alerta_nivel_2))
+                        .setSound(alarmSound)
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                         .build();
             case 3:
@@ -408,6 +418,7 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
                         .setContentTitle(getResources().getString(R.string.alerta_device))
                         .setContentText(getResources().getText(R.string.alerta_device_not_found))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setSound(notificationSound)
                         .build();
 
             default:
@@ -416,6 +427,7 @@ public class HomeActivity extends AppCompatActivity implements LocationListener,
                         .setContentTitle(getResources().getString(R.string.alerta_bom))
                         .setContentText(getResources().getText(R.string.alerta_bebe_a_salvo))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setSound(notificationSound)
                         .build();
         }
     }
